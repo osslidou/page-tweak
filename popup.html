@@ -1,0 +1,45 @@
+<html>
+
+<head>
+	<script src="popup.js"></script>
+	<style>
+		html,
+		body {
+			width: 100%;
+		}
+
+		textarea {
+			border: 1px solid #999999;
+			width: 95%;
+			height: 200px;
+			margin: 5px 0;
+		}
+
+		.inputs {
+			width: 95%;
+		}
+
+		#inner {
+			text-align: center;
+			line-height: 20px;
+		}
+	</style>
+</head>
+
+<body>
+	<h2>Note: Accessing this page will force a config-refresh</h2>
+	<div>
+		<div style="float:left;width:50%">
+			Urls configuration: <input id="rules_url" type="text" name="urls" class="inputs">
+			<textarea id="rules_text" readonly></textarea>
+		</div>
+		<div style="float:right;width:50%">
+			Additional functions: <input id="functions_url" type="text" name="urls" class="inputs">
+			<textarea id="functions_text" readonly></textarea>
+		</div>
+	</div>
+
+	<ul id='list' />
+</body>
+
+</html>
