@@ -47,12 +47,17 @@ chrome.storage.sync.get('config', function (items) {
                     break;
 
                 case 'update':
-                    switch (request.configKey) {
-                        case 'rules_url': config.rules_url = request.value; break;
-                        case 'functions_url': config.functions_url = request.value; break;
-                        case 'rules_text': config.rules_text = request.value; break;
-                        case 'functions_text': config.functions_text = request.value; break;
+                    switch (request.type) {
+                        case 'rules':
+                            config.rules_url = request.url;
+                            config.rules_text = request.text;
+                            break;
+                        case 'functions':
+                            config.functions_url = request.url;
+                            config.functions_text = request.text;
+                            break;
                     }
+
                     updateGlobalsFromConfig(config);
                     chrome.storage.sync.set({ 'config': config });
                     break;
@@ -119,7 +124,7 @@ function injectScriptsIntoTab(tabId, forceInject) {
     chrome.tabs.get(tabId, function (tab) {
         console.log("tab:", tab);
         console.log("tab.url:", tab.url);
-        if (tab.url.startsWith('chrome://'))
+        if (tab.url.startsWith('chrome://') || tab.url.startsWith('chrome-extension://'))
             return;
 
         injectJqueryIfNeeded(tab, forceInject, function () {

@@ -38,28 +38,12 @@ function handleLoad(type, target) {
     rawFile.open("GET", target, true);
     rawFile.onreadystatechange = function () {
         if (rawFile.readyState === 4 && rawFile.status == "200") {
-            var message = { cmd: 'update' };
-            if (type == 'rules') {
-                message.configKey = 'rules_text';
-                message.value = rawFile.responseText;
-                chrome.runtime.sendMessage(message);
-
-                message.configKey = 'rules_url';
-                message.value = target;
-                chrome.runtime.sendMessage(message, );
-            }
-            else if (type == 'functions') {
-                message.configKey = 'functions_text';
-                message.value = rawFile.responseText;
-                chrome.runtime.sendMessage(message);
-
-                message.configKey = 'functions_url';
-                message.value = target;
-                chrome.runtime.sendMessage(message, );
-            }
-            else
-                throw Exception('invalid type: ' + type);
-
+            chrome.runtime.sendMessage({
+                cmd: 'update',
+                type: type,
+                text: rawFile.responseText,
+                url: target
+            });
             show();
         }
     }
