@@ -1,9 +1,17 @@
+var popupDivContents;
+var forceSetTimerInLoop;
+
 if (!document.hasRun) {
     // add listener only once!
     console.log('onMessage listener added');
     chrome.runtime.onMessage.addListener(messageListener);
     document.hasRun = true;
+    setupPopup();
+} else {
+    console.log('__ already ran!');
+}
 
+function setupPopup() {
     var divTag = document.createElement('div');
     divTag.className = 'popup';
     divTag.setAttribute('data-popup', 'popup-1');
@@ -14,8 +22,8 @@ if (!document.hasRun) {
     divTag.appendChild(divInnerTag);
 
     // contains text..
-    var divContentsTag = document.createElement('div');
-    divInnerTag.appendChild(divContentsTag);
+    popupDivContents = document.createElement('div');
+    divInnerTag.appendChild(popupDivContents);
 
     var aTag = document.createElement('a');
     aTag.className = 'popup-close';
@@ -24,18 +32,6 @@ if (!document.hasRun) {
     aTag.innerText = 'x'
     divInnerTag.appendChild(aTag);
 
-    $(function () {
-        var elem = $('#a123456789');
-        console.log('elem:', elem);
-        $('#a123456789').on('click', function (e) {
-            //alert('clicked!');
-            $('[data-popup]').fadeOut(100);
-            e.preventDefault();
-        });
-
-        console.log('___ popup handlers intialized 2');
-    });
-
     $(document).keydown(function (e) {
         // ESCAPE key pressed
         if (e.keyCode == 27) {
@@ -43,16 +39,11 @@ if (!document.hasRun) {
             $('[data-popup]').fadeOut(350);
         }
     });
-
-    console.log('texarea created!')
-} else {
-    console.log('__ already ran!');
 }
 
 // function that waits for commands from background extension worker
 function messageListener(request, sender, sendResponse) {
-    console.log('messageListener');
-
+    console.log('messageListener: ', request);
     if (request.type === "isSetChromeTitle")
         handleOverrideWebTitle(request);
 
@@ -61,16 +52,15 @@ function messageListener(request, sender, sendResponse) {
 }
 
 function handleShowContextMenuData(request) {
-    //alert('showPopup5');
     var popup = $('[data-popup]');
 
     var funcEvaluation = eval(request.config.func);
     console.log('funcEvaluation=', funcEvaluation);
-    divContentsTag.innerHTML = "";
+    popupDivContents.innerHTML = "";
 
     funcEvaluation.map(function (item) {
         var pTag = document.createElement('p');
-        divContentsTag.appendChild(pTag);
+        popupDivContents.appendChild(pTag);
         pTag.innerText = item;
     });
 
@@ -79,8 +69,7 @@ function handleShowContextMenuData(request) {
 
 function handleOverrideWebTitle(request) {
     try {
-        console.log('incoming command: ' + JSON.stringify(request));
-
+        console.log('incoming command: ', request);
         var fullTitle = '';
         if (request.config.text)
             fullTitle = request.config.text;
@@ -94,14 +83,16 @@ function handleOverrideWebTitle(request) {
             fullTitle += ' • ' + originalTitle;
         }
 
-        setInterval(function () {
+        if (forceSetTimerInLoop)
+            clearInterval(forceSetTimerInLoop);
+
+        forceSetTimerInLoop = setInterval(function () {
             if (document.title !== fullTitle)
                 document.title = fullTitle;
-        }, 100);
+        }, 200);
     }
     catch (err) {
-        console.log('500 error: ' + err.message);
-        console.log(err);
+        console.log('500 error: ', err);
         data.error_code = 500;
         data.error_message = err.message;
     }

@@ -35,7 +35,7 @@ chrome.storage.sync.get('config', function (items) {
 
     updateGlobalsFromConfig(config);
     chrome.tabs.onUpdated.addListener(injectDependenciesAfterPageLoaded);
-    chrome.tabs.onActivated.addListener(afterActivePageChanged);
+    chrome.tabs.onActivated.addListener(afterTabActivated);
 
     chrome.runtime.onMessage.addListener(
         function (request, sender, sendResponse) {
@@ -49,11 +49,11 @@ chrome.storage.sync.get('config', function (items) {
                 case 'update':
                     switch (request.type) {
                         case 'rules':
-                            config.rules_url = request.url;
+                            config.rules_url = request.url || config.rules_url; // case when request.url is null
                             config.rules_text = request.text;
                             break;
                         case 'functions':
-                            config.functions_url = request.url;
+                            config.functions_url = request.url || config.functions_url; // case when request.url is null
                             config.functions_text = request.text;
                             break;
                     }
@@ -97,7 +97,7 @@ function getMatchingRuleAndRun(tabId, cb) {
         rules.some(function (rule) {
             console.log('rule url:' + rule.url + ' current url:' + tab.url);
             if (isMatchRule(tab.url, rule.url)) {
-                console.log('match!: ' + JSON.stringify(rule));
+                console.log('match!: ', rule);
                 cb(rule, tab.url);
                 return true;
             }
@@ -110,20 +110,25 @@ function isMatchRule(str, rule) {
 }
 
 function injectDependenciesAfterPageLoaded(tabId, changeInfo, tab) {
-    if (tab.url.startsWith("chrome://"))
+    if (!changeInfo)
         return;
 
-    console.log('changeInfo.status: ' + changeInfo);
+    console.log('________ afterTabUpdated', changeInfo);
     if (changeInfo.status === "loading" || changeInfo.status === "complete") {
         injectScriptsIntoTab(tabId, true);
     }
 }
 
+function afterTabActivated(activeInfo) {
+    if (!activeInfo)
+        return;
+
+    console.log('________ afterTabActivated: ', activeInfo);
+    injectScriptsIntoTab(activeInfo.tabId, false);
+}
+
 function injectScriptsIntoTab(tabId, forceInject) {
-    console.log("injectScriptsIntoTab:", tabId);
     chrome.tabs.get(tabId, function (tab) {
-        console.log("tab:", tab);
-        console.log("tab.url:", tab.url);
         if (tab.url.startsWith('chrome://') || tab.url.startsWith('chrome-extension://'))
             return;
 
@@ -169,9 +174,6 @@ function updateGlobalsFromConfig(config) {
     } catch (ex) { }
 }
 
-function afterActivePageChanged(activeInfo) {
-    injectScriptsIntoTab(activeInfo.tabId, false);
-}
 
 /*
 chrome.tabs.create({ url: "chrome://extensions" });
