@@ -59,9 +59,9 @@ function handleShowContextMenuData(request) {
     popupDivContents.innerHTML = "";
 
     funcEvaluation.map(function (item) {
-        var pTag = document.createElement('p');
-        popupDivContents.appendChild(pTag);
-        pTag.innerText = item;
+        var innerDiv = document.createElement('div');
+        popupDivContents.appendChild(innerDiv);
+        innerDiv.innerHTML = item;
     });
 
     popup.fadeIn(100);
