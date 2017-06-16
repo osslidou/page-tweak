@@ -95,7 +95,6 @@ function getMatchingRuleAndRun(tabId, cb) {
     chrome.tabs.get(tabId, function (tab) {
         var request = {};
         rules.some(function (rule) {
-            console.log('rule url:' + rule.url + ' current url:' + tab.url);
             if (isMatchRule(tab.url, rule.url)) {
                 console.log('match!: ', rule);
                 cb(rule, tab.url);
@@ -113,10 +112,9 @@ function injectDependenciesAfterPageLoaded(tabId, changeInfo, tab) {
     if (!changeInfo)
         return;
 
-    console.log('________ afterTabUpdated', changeInfo);
-    if (changeInfo.status === "loading" || changeInfo.status === "complete") {
-        injectScriptsIntoTab(tabId, true);
-    }
+    console.log('________ injectDependenciesAfterPageLoaded', changeInfo.status);
+    var forceInject = (changeInfo.status === "loading" || changeInfo.status === "complete")
+    injectScriptsIntoTab(tabId, forceInject);
 }
 
 function afterTabActivated(activeInfo) {
